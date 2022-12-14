@@ -1,4 +1,3 @@
-const { math } = require('@tensorflow/tfjs');
 const fs = require('fs');
 const input = fs.readFileSync('input4.txt', 'utf8');
 const parsed = input.split('\n');
