@@ -1,5 +1,3 @@
-const { Console } = require('console');
-const { FORMERR } = require('dns');
 const fs = require('fs');
 const input = fs.readFileSync('input5.txt', 'utf8');
 const parsed = input.split('\n');
