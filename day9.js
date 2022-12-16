@@ -2,10 +2,6 @@ const fs = require('fs');
 const input = fs.readFileSync('input9.txt', 'utf8');
 const inputLines = input.split('\n');
 
-// 2d array
-//if down, up, increment row, and add a new array if needed
-// if right/left, increment column, and add a new array if needed
-
 let headRow = 0;
 let headColumn = 0;
 let tailRow = 0;
