@@ -3,7 +3,6 @@ const { start } = require('repl');
 const input = fs.readFileSync('input12', 'utf8');
 const inputLines = input.split('\n');
 
-//console.log(inputLines);
 
 let row = 0;
 let column = 0; // inputLines[row].charAt[column]
@@ -14,9 +13,6 @@ let e = [0, 0];  //  row, column
 //replace with unicode chars
 inputLines.forEach(line => lines.push(populate(line)));
 
-//console.log(s);
-//console.log(e);
-//console.log(lines);
 //  lines is an array of arrays, each containing unicode chars for each line
 
 function populate(line){
@@ -38,9 +34,8 @@ function populate(line){
 
 function test4Directions(index){
     //  it gets the unicode chars up, down left and right of the given index position
+
     let up, down, left, right;
-    //console.log('index is ');
-    //console.log(index);
     if(index[0] == 0)
         up = 0; //  if at top row, there is no value above it
     else 
@@ -61,120 +56,111 @@ function test4Directions(index){
     return [up, down, left, right];
 }
 
-function findPotentialMoves(currentPoint, previousPoint){
-    //  make sure it doesnt go back the way it came
+function includesCoord(path, coord){
+    for(let i = 0; i < path.length; i++){
+        if(path[i][0] == coord[0] && path[i][1] == coord[1])
+            return true;
+    }
+    return false;
+}
 
-    //  currentpoint has to be a 1d array, it cannot be an array of arrays, which it seems to become
-    
-    //console.log('fpm about to call t4 with ');
-    //console.log(currentPoint);
+function findPotentialMoves(currentPoint, previousPoint, pathUpToNow){
+    //  returns a point, or points, which are the moves it can make from the current square
+    // make sure the path doesnt include that move
+
     let dirs = test4Directions(currentPoint);
-    //console.log('dirs');
-    //console.log(dirs);  // works
-    //console.log('2dirs');
     let potentialMoves = [];
     let currentChar = lines[currentPoint[0]] [currentPoint[1]];
     if(currentChar == 69)
         currentChar = 122;
-    //console.log('current char');
-    //console.log(currentChar);
-    //console.log('dirs: ' +dirs + 'currentChar' +currentChar);
-    //console.log('currentPoint: ' +currentPoint);
     //  check if its allowed to move in each direction, by comparing that character with the current square
     //  it chekcs if the char is 1 lower, but should it try moving if the char is the same as well?
     if(dirs[0] == currentChar - 1 || dirs[0] == currentChar){     // [0]=up, [1]=down, [2]=left, [3]=right
-        //console.log('1');
         let testPoint = [currentPoint[0]-1, currentPoint[1]];
-        if(testPoint[0] != previousPoint[0] && testPoint[1] != previousPoint[1])
+        if(testPoint[0] != previousPoint[0] && testPoint[1] != previousPoint[1] && !includesCoord(pathUpToNow, testPoint))
             potentialMoves.push( testPoint );
     }
     if(dirs[1] == currentChar - 1 || dirs[1] == currentChar ){
-        //console.log('2');
         let testPoint = [currentPoint[0]+1, currentPoint[1]];
-        if(testPoint[0] != previousPoint[0] && testPoint[1] != previousPoint[1])
+        if(testPoint[0] != previousPoint[0] && testPoint[1] != previousPoint[1] && !includesCoord(pathUpToNow, testPoint))
             potentialMoves.push( testPoint );
     }
     if(dirs[2] == currentChar - 1 || dirs[2] == currentChar){
-        //console.log('3');
         let testPoint = [currentPoint[0], currentPoint[1]-1];
-        if(testPoint[0] != previousPoint[0] && testPoint[1] != previousPoint[1])
+        if(testPoint[0] != previousPoint[0] && testPoint[1] != previousPoint[1] && !includesCoord(pathUpToNow, testPoint))
             potentialMoves.push( testPoint );
     }
     if(dirs[3] == currentChar - 1 || dirs[3] == currentChar){
-        //console.log('4');
         let testPoint = [currentPoint[0], currentPoint[1]+1];
-        //console.log('testpoint');
-        //console.log(testPoint);
-        //console.log('testPoint[0] : ' +testPoint[0] + ' testPoint[1] ' + testPoint[1]); //  works
-        //console.log('prevPoint[0] : ' +previousPoint[0] + ' prevPoint[1] ' + previousPoint[1]); //  works
-        if(testPoint[0] != previousPoint[0] || testPoint[1] != previousPoint[1])
+        if(testPoint[0] != previousPoint[0] || testPoint[1] != previousPoint[1] && !includesCoord(pathUpToNow, testPoint))
             potentialMoves.push( testPoint );
     }
-
-    // the bug is here, it returns an array of arrays when it should return a 1d array
-    //console.log('findpotentialmoves returning');
-    //console.log(potentialMoves);
-    //console.log('dirs returning');
-    //console.log(potentialMoves);
     return potentialMoves;
 }
 
 let currentIndex = e;  //  start from end
+let pathsTaken = [];
 
-
-function makeMoves(startingPoint){
+function makeMoves(startingPoint, pathUpToNow){
+    //give it the path array it took beofre this point
+    // otherwise give it an empty array
     // given starting coordinates, 
     //  makes moves until it reaches deadend or split point, or end of maze(the starting point S), 
     //  returns the coords at which it arrived
     //  if starting point is a split point, returns the starting point
-    //console.log('fpm call 1 with');
-    //console.log(startingPoint);
-    let potentialMoves = findPotentialMoves(startingPoint, startingPoint);
-    //console.log('pm ');
-    //console.log(potentialMoves);
-    //console.log('2pm');
+    let currentPath = pathUpToNow;
+    let potentialMoves = findPotentialMoves(startingPoint, startingPoint, currentPath);
     let currentPoint = startingPoint;
     let previousPoint = startingPoint;
-
+    
     let iterations = 0;
     while(potentialMoves.length == 1 && currentPoint != s && iterations < 10000){
         iterations++;
+        if(currentPath[currentPath.length -1] != currentPoint)
+            currentPath.push(currentPoint);
         previousPoint = currentPoint;
-        //console.log('mm about to set currentpoint to ');
-        //console.log(potentialMoves[0]);
         currentPoint = potentialMoves[0];
-        //console.log('set currentPoint to ' +currentPoint);
-        //console.log('fpm call 2 with');
-        //console.log(currentPoint);
-        potentialMoves = findPotentialMoves(currentPoint, previousPoint);
+        potentialMoves = findPotentialMoves(currentPoint, previousPoint, currentPath);
     }
 
     if(potentialMoves.length == 0){
         return -1;
     }
+
+    if(potentialMoves.length > 1){
+        ManageSplitPoint(currentPath, potentialMoves);
+    }
+
+    if(currentPoint == s)
+        pathsTaken.push(currentPath);
+
+    pathsTaken.push(currentPath);
+
     //  if it returns a point, it will be either the end of maze(S) or a split point
-    return currentPoint;
+    //return currentPoint;
 }
 
 
-let iterations = 0;
-let currentCoords = s;
-class Splitpoint {
-    constructor(point, steps){
-        this.point = point;
-        this.steps = steps;
-    }
-}
-let splitpoints = [];
-while(iterations < 1000 && currentCoords != s){
-    iterations++;
-    let moveAttempt = makeMoves(currentCoords);
-    
-    if(moveAttempt == currentCoords){
-        //  current coords is a split point
-        splitpoints.push(new Splitpoint(currentCoords, iterations));
-    }
+
+function ManageSplitPoint(path, potentialMoves){
+    potentialMoves.forEach(move => {
+        let tempPath = path;
+        tempPath.push(move);
+        //if(!pathsTaken.includes(tempPath)){
+            makeMoves(move, tempPath)
+        //}
+    })
 }
 
+
+makeMoves(e, []);
+console.log(pathsTaken);
 
 // S = 83, E = 69
+
+
+//save path in array
+//when it reaches split point
+// while split point has possible directions
+//remove one of the directions and do a path in that one
+//keep removing directions and doing a path for each one until no more direction remain in the splitpoint
